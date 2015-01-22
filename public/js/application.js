@@ -6,8 +6,26 @@ $( document ).ready( function() {
     var socket = io.connect("/");
 
     socket.on('message', function(data) {
+
         console.log(data);
-        if (data == "next") {
+
+        if (data.substring(0,6) == "STATUS") {
+
+            var data_array = data.split(",");
+
+            asv_latitude = data_array[1];
+            asv_longitude = data_array[2];
+            asv_current_course = data_array[3];
+            asv_wanted_course = data_array[4];
+
+            asv_marker.options.angle = asv_current_course; //direction * (180 / Math.PI);
+
+            var asv_position = new L.LatLng(asv_latitude, asv_longitude);
+            asv_marker.setLatLng(asv_position);
+            asv_history.addLatLng(asv_position);
+            //asv_history.options.smoothFactor = 1;
+
+        } else if (data == "next") {
             planned_checkpoints.getLayers()[0].spliceLatLngs(0,1)[0];
             var last_cleared_checkpoint = planned_checkpoints.getLayers()[0].getLatLngs()[0];
             console.log("checkpoint at latitude " + last_cleared_checkpoint.lat + " and longitude " + last_cleared_checkpoint.lng + " cleared");
@@ -108,39 +126,9 @@ $( document ).ready( function() {
     };
     var next_checkpoint = L.circle([59.936637, 10.717087], checkpoint_radius, next_checkpoint_options).addTo(map);
 
-    var direction = 0;
-    var manual = false;
-
-    window.setInterval(function() {
-        asv_marker.options.angle = direction * (180 / Math.PI);
-        var ll = asv_marker.getLatLng();
-        ll.lat += Math.cos(direction) / 100000;
-        ll.lng += Math.sin(direction) / 100000;
-        asv_marker.setLatLng(ll);
-        asv_history.addLatLng(new L.LatLng(ll.lat, ll.lng));
-        //asv_history.options.smoothFactor = 1;
-        if (!manual && Math.random() > 0.95) {
-            direction += (Math.random() - 0.5) / 2;
-        }
-    }, 100);
-
     window.setInterval(function() {
         if (!map.getBounds().contains(asv_marker.getLatLng())) {
             map.panTo(asv_marker.getLatLng());
         }
     }, 1000);
-
-    document.body.addEventListener('keydown', function(e) {
-        if (e.which == 37) {
-            direction -= 0.1;
-            socket.emit('message', "" + direction);
-            manual = true;
-        }
-        if (e.which == 39) {
-            direction += 0.1;
-            socket.emit('message', "" + direction);
-            manual = true;
-        }
-    }, true);
-
 });
