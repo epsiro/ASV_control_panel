@@ -12,7 +12,7 @@ function http_handler(request, response) {
 var http = require('http');
 
 var app = http.createServer(http_handler);
-app.listen(8080, '0.0.0.0');
+app.listen(80, '0.0.0.0');
 
 /* Setting up socket.io */
 var io = require('socket.io').listen(app);
@@ -27,7 +27,7 @@ io.sockets.on('connection', function(socket) {
         var message = new Buffer(data);
 
         //client.send(message, 0, message.length, address.port, address.address, function(err, bytes) {
-        client.send(message, 0, message.length, "8000", "192.168.4.1", function(err, bytes) {
+        client.send(message, 0, message.length, "8000", "192.168.0.217", function(err, bytes) {
             client.close();
         });
     });
