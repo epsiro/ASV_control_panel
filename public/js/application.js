@@ -38,8 +38,8 @@ $( document ).ready( function() {
 
     /* Init map */
     var map = L.map('map').setView([59.936637, 10.717087], 17);
-    L.tileLayer('https://{s}.tiles.mapbox.com/v3/examples.map-i87786ca/{z}/{x}/{y}.png', {
-    //L.tileLayer('img/tiles/{x}/{y}.png', {
+    //L.tileLayer('https://{s}.tiles.mapbox.com/v3/examples.map-i87786ca/{z}/{x}/{y}.png', {
+    L.tileLayer('img/tiles/{x}/{y}.png', {
             zoom: 18,
             maxZoom: 18,
             detectRetina: true
