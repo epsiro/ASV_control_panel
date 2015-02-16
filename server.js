@@ -21,7 +21,7 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('message', function(data) {
 
-        console.log(data);
+        console.log("sending:" + data);
         //var address = udp_server.address();
         var client = dgram.createSocket("udp4");
         var message = new Buffer(data);
@@ -54,5 +54,3 @@ udp_server.on('error', function(err) {
 });
 
 udp_server.bind(8000);
-
-io.sockets.emit('message', "bendik");

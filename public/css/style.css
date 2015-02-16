@@ -6,3 +6,18 @@ body {
 html, body, #map {
     height: 100%;
 }
+
+div#status {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /*
+    z-index: 2;
+    margin: 0 auto;
+    width: 90%;
+    height: 5em;
+    */
+    overflow: hidden;
+    background-color: rgba(255,255,255,0.4);
+}
