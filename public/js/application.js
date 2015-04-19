@@ -19,7 +19,7 @@ $( document ).ready( function() {
 
         if (data.substring(0,6) == "STATUS") {
 
-            $('div#status').text(data);
+            $('div#status_bar').text(data);
 
             var data_array = data.split(",");
 
@@ -39,6 +39,18 @@ $( document ).ready( function() {
             asv_next_waypoint_longitude = data_array[14];
             asv_port_motor_thrust = data_array[15];
             asv_stbd_motor_thrust = data_array[16];
+
+            $("span#asv_date_time").text("20" + asv_date.substring(4,6) + "-"
+                    + asv_date.substring(2,4) + "-" + asv_date.substring(0,2) + " "
+                    + asv_time.substring(0,2) + ":" + asv_time.substring(2,4) + ":"
+                    + asv_time.substring(4,6) + " UTC+2");
+            //$("span#asv_latitude_longitude").text();
+            $("span#asv_distance_from_wp").text(asv_distance_from_wp + " m to WP");
+            $("span#asv_nr_of_wp").text(asv_nr_of_wp + " WP");
+            //$("span#asv_mag_accuracy").text();
+            //$("span#asv_run_motors").text();
+            $("span#asv_port_motor_thrust").text("Port motor thrust: " + asv_port_motor_thrust);
+            $("span#asv_stbd_motor_thrust").text("Starboard motor thrust: " + asv_stbd_motor_thrust);
 
             draw_indicator(heading_ctx, asv_wanted_heading, asv_current_heading);
 
@@ -240,12 +252,12 @@ $( document ).ready( function() {
 
         // Draw outer circle
         ctx.beginPath();
-        ctx.arc(center_x, center_y, 90, 0, 2*Math.PI, false);
+        ctx.arc(center_x, center_y, 100, 0, 2*Math.PI, false);
         ctx.lineWidth = 1;
         ctx.strokeStyle = '#000';
         ctx.fillStyle = "rgba(0,0,0,0.1)";
         ctx.fill();
-        ctx.stroke();
+        //ctx.stroke();
 
         // Draw N, S, E, W
         ctx.save();
@@ -255,28 +267,28 @@ $( document ).ready( function() {
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         ctx.save();
-        ctx.translate(0, -50);
+        ctx.translate(0, -60);
         ctx.fillText("N", 0, 0);
         ctx.restore();
         ctx.save();
-        ctx.translate(50, 0);
+        ctx.translate(60, 0);
         ctx.fillText("E", 0, 0);
         ctx.restore();
         ctx.save();
-        ctx.translate(0, 50);
+        ctx.translate(0, 60);
         ctx.fillText("S", 0, 0);
         ctx.restore();
         ctx.save();
-        ctx.translate(-50, 0);
+        ctx.translate(-60, 0);
         ctx.fillText("W", 0, 0);
         ctx.restore();
         ctx.restore();
 
         // Draw wanted heading
         ctx.lineWidth = 2;
-        ctx.setLineDash([5]);
+        ctx.setLineDash([2]);
         ctx.strokeStyle = '#f00';
-        draw_needle(85, degrees_wanted);
+        draw_needle(90, degrees_wanted);
         ctx.setLineDash([]);
 
         // Draw needle mounting
@@ -291,7 +303,7 @@ $( document ).ready( function() {
         // Draw current heading
         ctx.lineWidth = 2;
         ctx.strokeStyle = '#00F';
-        draw_needle(85, degrees_current);
+        draw_needle(90, degrees_current);
 
         function draw_tics() {
             ctx.strokeStyle = "black";
@@ -306,7 +318,7 @@ $( document ).ready( function() {
                 ctx.translate(center_x, center_y);
                 var angle = (i * (360/nr_of_tics)) * Math.PI/180;
                 ctx.rotate(angle);
-                ctx.translate(0, -160/2);
+                ctx.translate(0, -180/2);
 
                 ctx.moveTo(0, 0);
                 ctx.lineTo(0, 10);
