@@ -22,16 +22,20 @@ io.sockets.on('connection', function(socket) {
     socket.on('message', function(data) {
 
         console.log("sending:" + data);
-        //var address = udp_server.address();
-        var client = dgram.createSocket("udp4");
+
+        var client = new net.Socket();
         var message = new Buffer(data);
 
-        //client.send(message, 0, message.length, address.port, address.address, function(err, bytes) {
-        client.send(message, 0, message.length, "8000", "192.168.0.217", function(err, bytes) {
-            client.close();
+        client.connect(30470, "192.168.0.21", function() {
+            client.write(message);
+            client.destroy();
         });
+
     });
 });
+
+/* Setting up TCP client */
+var net = require('net');
 
 /* Setting up UDP server */
 var dgram = require('dgram');
