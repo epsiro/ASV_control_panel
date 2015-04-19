@@ -1,5 +1,13 @@
 $( document ).ready( function() {
 
+    var heading_canvas = $('div#heading canvas')[0];
+
+    if (heading_canvas.getContext('2d')) {
+        heading_ctx = heading_canvas.getContext('2d');
+    } else {
+        alert("Canvas not supported!");
+    }
+
     var checkpoint_radius = 4;
 
     /* Connect to socket */
@@ -8,9 +16,10 @@ $( document ).ready( function() {
     socket.on('message', function(data) {
 
         console.log(data);
-        $('div#status').text(data);
 
         if (data.substring(0,6) == "STATUS") {
+
+            $('div#status').text(data);
 
             var data_array = data.split(",");
 
@@ -28,6 +37,10 @@ $( document ).ready( function() {
             asv_first_waypoint_longitude = data_array[12];
             asv_next_waypoint_latitude = data_array[13];
             asv_next_waypoint_longitude = data_array[14];
+            asv_port_motor_thrust = data_array[15];
+            asv_stbd_motor_thrust = data_array[16];
+
+            draw_indicator(heading_ctx, asv_wanted_heading, asv_current_heading);
 
             asv_marker.options.angle = asv_current_heading; //direction * (180 / Math.PI);
             asv_marker.update();
@@ -187,4 +200,137 @@ $( document ).ready( function() {
             map.panTo(asv_marker.getLatLng());
         }
     }, 1000);
+
+    function clear_canvas(ctx) {
+        ctx.clearRect(0, 0, 200, 200);
+    }
+
+    function draw(degrees) {
+
+        clear_canvas();
+
+        // Draw the compass onto the canvas
+        ctx.drawImage(compass, 0, 0);
+
+        // Save the current drawing state
+        ctx.save();
+
+        // Now move across and down half the 
+        ctx.translate(100, 100);
+
+        // Rotate around this point
+        ctx.rotate(degrees * (Math.PI / 180));
+
+        // Draw the image back and up
+        ctx.drawImage(needle, -100, -100);
+
+        // Restore the previous drawing state
+        ctx.restore();
+
+        // Increment the angle of the needle by 5 degrees
+        //degrees += 5;
+    }
+
+    function draw_indicator(ctx, degrees_wanted, degrees_current) {
+
+        ctx.clearRect(0, 0, 200, 200);
+
+        var center_x = 100;
+        var center_y = 100;
+
+        // Draw outer circle
+        ctx.beginPath();
+        ctx.arc(center_x, center_y, 90, 0, 2*Math.PI, false);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#000';
+        ctx.fillStyle = "rgba(0,0,0,0.1)";
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw N, S, E, W
+        ctx.save();
+        ctx.translate(center_x, center_y);
+        ctx.fillStyle = "#666";
+        ctx.font = "bold 16px Arial";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.save();
+        ctx.translate(0, -50);
+        ctx.fillText("N", 0, 0);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(50, 0);
+        ctx.fillText("E", 0, 0);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(0, 50);
+        ctx.fillText("S", 0, 0);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(-50, 0);
+        ctx.fillText("W", 0, 0);
+        ctx.restore();
+        ctx.restore();
+
+        // Draw wanted heading
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5]);
+        ctx.strokeStyle = '#f00';
+        draw_needle(85, degrees_wanted);
+        ctx.setLineDash([]);
+
+        // Draw needle mounting
+        ctx.beginPath();
+        ctx.arc(center_x, center_y, 5, 0, 2 * Math.PI, false);
+        ctx.fillStyle = '#00F';
+        ctx.fill();
+        ctx.closePath();
+
+        draw_tics();
+
+        // Draw current heading
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#00F';
+        draw_needle(85, degrees_current);
+
+        function draw_tics() {
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 1;
+
+            // 360/72 = 5 degrees
+            var nr_of_tics = 72;
+
+            for (var i = 0; i < nr_of_tics; i++) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.translate(center_x, center_y);
+                var angle = (i * (360/nr_of_tics)) * Math.PI/180;
+                ctx.rotate(angle);
+                ctx.translate(0, -160/2);
+
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, 10);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+            }
+        }
+
+        function draw_needle(length, angle) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.translate(center_x, center_y);
+
+                // Correct for top left origin
+                ctx.rotate(-180 * Math.PI/180);
+
+                ctx.rotate(angle * Math.PI/180);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, length);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+        }
+
+    }
 });
