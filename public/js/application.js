@@ -1,5 +1,17 @@
 $( document ).ready( function() {
 
+    var ready_for_new_wp = false;
+    //var ready_to_send_wp = false;
+    var draw_wanted = false;
+    var got_message = false;
+
+    var asv_planned_route = [
+        [59.95990811, 10.79299452],
+        [59.95978586, 10.79244960],
+        [59.95966608, 10.79192318],
+        [59.95951144, 10.79206993]
+    ];
+
     var heading_canvas = $('div#heading canvas')[0];
 
     if (heading_canvas.getContext('2d')) {
@@ -10,12 +22,14 @@ $( document ).ready( function() {
 
     var checkpoint_radius = 4;
 
+    var asv_nr_of_msg = 0;
+
     /* Connect to socket */
     var socket = io.connect("/");
 
     socket.on('message', function(data) {
 
-        console.log(data);
+        //console.log(data);
 
         if (data.substring(0,6) == "STATUS") {
 
@@ -27,32 +41,70 @@ $( document ).ready( function() {
             asv_time = data_array[2];
             asv_latitude = data_array[3];
             asv_longitude = data_array[4];
-            asv_current_heading = data_array[5];
-            asv_wanted_heading = data_array[6];
-            asv_distance_from_wp = data_array[7];
-            asv_nr_of_wp = data_array[8];
-            asv_mag_accuracy = data_array[9];
-            asv_run_motors = data_array[10];
-            asv_first_waypoint_latitude = data_array[11];
-            asv_first_waypoint_longitude = data_array[12];
-            asv_next_waypoint_latitude = data_array[13];
-            asv_next_waypoint_longitude = data_array[14];
-            asv_port_motor_thrust = data_array[15];
-            asv_stbd_motor_thrust = data_array[16];
+            asv_gps_ok = data_array[5];
+            asv_current_heading = data_array[6];
+            asv_wanted_heading = data_array[7];
+            asv_distance_from_wp = data_array[8];
+            asv_nr_of_wp = data_array[9];
+            asv_mag_accuracy = data_array[10];
+            asv_run_motors = data_array[11];
+            asv_first_waypoint_latitude = data_array[12];
+            asv_first_waypoint_longitude = data_array[13];
+            asv_next_waypoint_latitude = data_array[14];
+            asv_next_waypoint_longitude = data_array[15];
+            asv_port_motor_thrust = data_array[16];
+            asv_stbd_motor_thrust = data_array[17];
 
-            $("span#asv_date_time").text("20" + asv_date.substring(4,6) + "-"
-                    + asv_date.substring(2,4) + "-" + asv_date.substring(0,2) + " "
-                    + asv_time.substring(0,2) + ":" + asv_time.substring(2,4) + ":"
-                    + asv_time.substring(4,6) + " UTC+2");
             //$("span#asv_latitude_longitude").text();
-            $("span#asv_distance_from_wp").text(asv_distance_from_wp + " m to WP");
             $("span#asv_nr_of_wp").text(asv_nr_of_wp + " WP");
             //$("span#asv_mag_accuracy").text();
             //$("span#asv_run_motors").text();
-            $("span#asv_port_motor_thrust").text("Port motor thrust: " + asv_port_motor_thrust);
-            $("span#asv_stbd_motor_thrust").text("Starboard motor thrust: " + asv_stbd_motor_thrust);
+            $("span#asv_port_motor_thrust").text(asv_port_motor_thrust);
+            $("span#asv_stbd_motor_thrust").text(asv_stbd_motor_thrust);
 
-            draw_indicator(heading_ctx, asv_wanted_heading, asv_current_heading);
+            //$("span#asv_motor_running").removeClass("fa-spin");
+            $("span#asv_motor_running").siblings('i').removeClass("fa-spin");
+            if (asv_run_motors == "1") {
+                $("span#asv_motor_running").siblings('i').addClass("fa-spin");
+                $("span#asv_motor_running").text("Running")
+            } else {
+                $("span#asv_motor_running").text("Not running")
+                $("span#asv_motor_running").text(ready_for_new_wp)
+            }
+
+            if (asv_gps_ok == "1") {
+                $("span#asv_gps_ok").text("OK").css('color', 'green');
+                $("span#asv_date").text("20" + asv_date.substring(4,6) + "-" + asv_date.substring(2,4) + "-" + asv_date.substring(0,2));
+                $("span#asv_time").text(parseInt(asv_time.substring(0,2))+2 + ":" + asv_time.substring(2,4) + ":" + asv_time.substring(4,6));
+            } else {
+                $("span#asv_gps_ok").text("Not OK").css('color', 'red');
+                $("span#asv_date").text("N/A");
+                $("span#asv_time").text("N/A");
+            }
+
+            if (parseInt(asv_mag_accuracy) >= 3) {
+                $("span#asv_compass_ok").text("OK").css('color', 'green');
+            } else {
+                $("span#asv_compass_ok").text("Not OK").css('color', 'red');
+            }
+
+            if (asv_gps_ok = "1" && parseInt(asv_first_waypoint_latitude) != 0 && parseInt(asv_first_waypoint_longitude) != 0) {
+                $("span#asv_distance_from_wp").text(asv_distance_from_wp + " m to WP");
+                draw_wanted = true;
+            } else {
+                $("span#asv_distance_from_wp").text("N/A");
+                draw_wanted = false;
+            }
+
+            $("span#asv_nr_of_msg").text(++asv_nr_of_msg);
+            $("span#asv_nr_of_msg").siblings('i').addClass("fa-spin");
+
+            if (asv_nr_of_msg >= 99) {
+                asv_nr_of_msg = 0
+            }
+            got_message = true;
+
+            draw_indicator(heading_ctx, asv_wanted_heading, asv_current_heading, draw_wanted);
 
             asv_marker.options.angle = asv_current_heading; //direction * (180 / Math.PI);
             asv_marker.update();
@@ -67,32 +119,32 @@ $( document ).ready( function() {
             first_waypoint.setLatLng(new L.LatLng(asv_first_waypoint_latitude, asv_first_waypoint_longitude));
             next_waypoint.setLatLng(new L.LatLng(asv_next_waypoint_latitude, asv_next_waypoint_longitude));
 
-            if (asv_nr_of_wp < 2) {
+            if (parseInt(asv_nr_of_wp) < 2 && ready_for_new_wp == true) {
+                //planned_checkpoints.getLayers()[0].spliceLatLngs(0,1)[0];
+                //var last_cleared_checkpoint = planned_checkpoints.getLayers()[0].getLatLngs()[0];
+                //console.log("checkpoint at latitude " + last_cleared_checkpoint.lat + " and longitude " + last_cleared_checkpoint.lng + " cleared");
+                //cleared_checkpoints.addLatLng(last_cleared_checkpoint);
+                //next_checkpoint.setLatLng(last_cleared_checkpoint);
+                //socket.emit('message', 'NWP,'+ last_cleared_checkpoint.lat + "," + last_cleared_checkpoint.lon);
+                var next = asv_planned_route.shift();
+                socket.emit('message', 'NWP,'+ next[0] + "," + next[1]);
+                ready_for_new_wp = false;
             }
-
-        //} else if (data == "next") {
-
-            /*
-            if (asv_nr_of_wp < 2) {
-                planned_checkpoints.getLayers()[0].spliceLatLngs(0,1)[0];
-                var last_cleared_checkpoint = planned_checkpoints.getLayers()[0].getLatLngs()[0];
-                console.log("checkpoint at latitude " + last_cleared_checkpoint.lat + " and longitude " + last_cleared_checkpoint.lng + " cleared");
-                cleared_checkpoints.addLatLng(last_cleared_checkpoint);
-                next_checkpoint.setLatLng(last_cleared_checkpoint);
-                socket.emit('message', 'NWP,'+ last_cleared_checkpoint.lat + "," + last_cleared_checkpoint.lon);
-            }
-            */
+        } else if (data.substring(0,6) == "ACKRWP") {
+                ready_for_new_wp = true;
         }
     });
 
     socket.emit('message', 'ASV Control Panel started');
 
     /* Init map */
-    var map = L.map('map', {zoomControl: false}).setView([59.936637, 10.717087], 17);
+    //var map = L.map('map', {zoomControl: false}).setView([59.936637, 10.717087], 17);
+    //var map = L.map('map', {zoomControl: true}).setView([59.959707, 10.792272], 19);
+    var map = L.map('map', {zoomControl: false}).setView([59.95974031, 10.79310980], 19);
     //L.tileLayer('https://{s}.tiles.mapbox.com/v3/examples.map-i87786ca/{z}/{x}/{y}.png', {
-    L.tileLayer('img/tiles/{x}/{y}.png', {
-            zoom: 18,
-            maxZoom: 18,
+    L.tileLayer('img/tiles/{z}/{x}/{y}.png', {
+            zoom: 21,
+            maxZoom: 21,
             detectRetina: true
             }).addTo(map);
 
@@ -104,7 +156,8 @@ $( document ).ready( function() {
     map.keyboard.disable();
     //if (map.tap) map.tap.disable();
 
-    var asv_marker = L.rotatedMarker(new L.LatLng(59.936637, 10.717087), {
+    var asv_marker = L.rotatedMarker(new L.LatLng(59.959707, 10.792272), {
+    //var asv_marker = L.rotatedMarker(new L.LatLng(59.936637, 10.717087), {
         icon: L.icon({
             iconUrl: 'img/asv_marker.png',
             iconRetinaUrl: 'img/asv_marker@2x.png',
@@ -118,11 +171,18 @@ $( document ).ready( function() {
     /* Init buttons */
 
     L.easyButton('fa-send', function() {
+        ready_for_new_wp = true;
+        //ready_to_send_wp = true;
+/*
         // MORE TODO
         //socket.emit('message', 'NWP, 59.937638, 10.717012');
-        socket.emit('message', 'NWP, 59.938354, 10.717946');
+        //socket.emit('message', 'NWP, 59.938354, 10.717946'); // corner fys
+        socket.emit('message', 'NWP, 59.959531, 10.792848'); // kjelsaas
+        //59.959747, 10.792734
+        //
         //var last_cleared_checkpoint = planned_checkpoints.getLayers()[0].getLatLngs()[0];
         //socket.emit('message', 'NWP,' + last_cleared_checkpoint.lat.toFixed(6) + "," + last_cleared_checkpoint.lng.toFixed(6));
+*/
 
         /*
         //planned_checkpoints.getLayers()[0].spliceLatLngs(0,1)[0];
@@ -132,7 +192,11 @@ $( document ).ready( function() {
         //next_checkpoint.setLatLng(last_cleared_checkpoint);
         //socket.emit('message', 'NWP,' + last_cleared_checkpoint.lat.toFixed(6) + "," + last_cleared_checkpoint.lng.toFixed(6));
         */
-    }, "Send wp", map);
+    }, "Send WP", map);
+
+    L.easyButton('fa-trash', function() {
+        socket.emit('message', 'DEL');
+    }, "Delete WP", map);
 
     L.easyButton('fa-play', function() {
         socket.emit('message', 'RUN');
@@ -176,10 +240,12 @@ $( document ).ready( function() {
     });
 
     /* Init asv history */
-    var asv_history_points = [ [59.936637, 10.717087] ];
+    //var asv_history_points = [ [59.936637, 10.717087] ];
+    //var asv_history_points = [ [59.959707, 10.792272] ];
+    var asv_history_points = [ [59.95974031, 10.79310980] ];
 
     var asv_history_options = {
-        smoothFactor: 2,
+        smoothFactor: 1,
         color: '#000'
     };
 
@@ -198,20 +264,57 @@ $( document ).ready( function() {
 
     /* Init future waypoint markers */
     var waypoint_options = {
-        color: '#ff0',
+        color: '#f00',
         opacity: 1,
         weight: 10,
-        fillColor: '#ff0',
+        fillColor: '#f00',
         fillOpacity: 0.5
     };
     var first_waypoint = L.circle([0, 0], checkpoint_radius, waypoint_options).addTo(map);
     var next_waypoint = L.circle([0, 0], checkpoint_radius/2, waypoint_options).addTo(map);
 
+
+    var circle_options = {
+        color: '#ff0',
+        opacity: 1,
+        weight: 3
+    };
+
+    L.circle([59.95974031, 10.79310980], 1, circle_options).addTo(map);
+    L.circle([59.95990811, 10.79299452], 1, circle_options).addTo(map);
+    L.circle([59.95978586, 10.79244960], 1, circle_options).addTo(map);
+    L.circle([59.95966608, 10.79192318], 1, circle_options).addTo(map);
+    L.circle([59.95951144, 10.79206993], 1, circle_options).addTo(map);
+
+    //var seconds_counter = 0;
     window.setInterval(function() {
         if (!map.getBounds().contains(asv_marker.getLatLng())) {
-            map.panTo(asv_marker.getLatLng());
+            //map.panTo(asv_marker.getLatLng());
         }
+
+        if (got_message == false) {
+            $("span#asv_nr_of_msg").siblings('i').removeClass("fa-spin");
+        }
+        got_message = false;
+
+/*
+        if (seconds_counter >= 1) {
+            ready_for_new_wp = true;
+            seconds_counter = 0;
+        } else {
+            seconds_counter++;
+        }
+*/
+
     }, 1000);
+
+    //var s = Snap("#svg");
+
+    //var rect = s.rect(10, 10, 100, 100);
+    //rect.animate({
+            //x: 50,
+            //y: 50
+    //}, 1000);
 
     function clear_canvas(ctx) {
         ctx.clearRect(0, 0, 200, 200);
@@ -243,7 +346,7 @@ $( document ).ready( function() {
         //degrees += 5;
     }
 
-    function draw_indicator(ctx, degrees_wanted, degrees_current) {
+    function draw_indicator(ctx, degrees_wanted, degrees_current, draw_wanted) {
 
         ctx.clearRect(0, 0, 200, 200);
 
@@ -262,8 +365,8 @@ $( document ).ready( function() {
         // Draw N, S, E, W
         ctx.save();
         ctx.translate(center_x, center_y);
-        ctx.fillStyle = "#666";
-        ctx.font = "bold 16px Arial";
+        ctx.fillStyle = "black";
+        ctx.font = "1.3em open_sansregular";
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         ctx.save();
@@ -284,12 +387,14 @@ $( document ).ready( function() {
         ctx.restore();
         ctx.restore();
 
-        // Draw wanted heading
-        ctx.lineWidth = 2;
-        ctx.setLineDash([2]);
-        ctx.strokeStyle = '#f00';
-        draw_needle(90, degrees_wanted);
-        ctx.setLineDash([]);
+        if (draw_wanted == true) {
+            // Draw wanted heading
+            ctx.lineWidth = 2;
+            ctx.setLineDash([2]);
+            ctx.strokeStyle = '#f00';
+            draw_needle(90, degrees_wanted);
+            ctx.setLineDash([]);
+        }
 
         // Draw needle mounting
         ctx.beginPath();

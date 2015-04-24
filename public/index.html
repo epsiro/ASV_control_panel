@@ -17,14 +17,40 @@
         <canvas id="compass" width="200" height="200"></canvas>
     </div>
     <div id="status_window">
-        <span id="asv_date_time"></span>
+        <ul class="fa-ul">
+            <li><i class="fa-li fa fa-gear"></i><span id="asv_motor_running"></span></li>
+            <li><i class="fa-li fa fa-calendar"></i><span id="asv_date"></span></li>
+            <li><i class="fa-li fa fa-clock-o"></i><span id="asv_time"></span></li>
+            <li><i class="fa-li fa fa-check-circle-o"></i><span id="asv_nr_of_wp"></span></li>
+            <li><i class="fa-li fa fa-arrows-h"></i><span id="asv_distance_from_wp"></span></li>
+            <li><i class="fa-li fa fa-compass"></i><span id="asv_compass_ok"></span></li>
+            <li><i class="fa-li fa fa-globe"></i><span id="asv_gps_ok"></span></li>
+            <li><i class="fa-li fa fa-refresh fa-spin"></i><span id="asv_nr_of_msg"></span></li>
+        </ul>
+
+        <div style="width: 80px; margin: 0 auto; text-align: center">
+        <div style="float:left; margin-right: 20px;">
+        <span style="font-size: 14px; font-family: sans-serif; font-weight: bold" class="fa-stack">
+          <i class="fa fa-circle-o fa-stack-2x"></i>
+          <i class="fa fa-stack-1x">L</i>
+        </span><br />
+        <span id="asv_port_motor_thrust"></span>
+        </div>
+        <div>
+        <span style="font-size: 14px; font-family: sans-serif; font-weight: bold" class="fa-stack">
+          <i class="fa fa-circle-o fa-stack-2x"></i>
+          <i class="fa fa-stack-1x">R</i>
+        </span><br />
+        <span id="asv_stbd_motor_thrust"></span>
+        </div>
+        </div>
+<!--
         <span id="asv_latitude_longitude"></span>
-        <span id="asv_distance_from_wp"></span>
-        <span id="asv_nr_of_wp"></span>
-        <span id="asv_mag_accuracy"></span>
         <span id="asv_run_motors"></span>
         <span id="asv_port_motor_thrust"></span>
         <span id="asv_stbd_motor_thrust"></span>
+        <svg id="svg" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
+-->
     </div>
     <script src="lib/jquery.min.js"></script>
     <script src="lib/leaflet.js"></script>

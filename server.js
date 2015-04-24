@@ -1,3 +1,9 @@
+/* Setup logging */
+var winston = require('winston');
+winston.add(winston.transports.File, { filename: 'myrerjordet_test_2014-04-25.log' });
+
+winston.info('Starting server.');
+
 /* Setting up webserver */
 var node_static = require('node-static');
 
@@ -21,12 +27,13 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('message', function(data) {
 
-        console.log("sending:" + data);
+        //console.log("sending:" + data);
+        winston.info("sending:" + data);
 
         var client = new net.Socket();
         var message = new Buffer(data);
 
-        client.connect(30470, "192.168.0.21", function() {
+        client.connect(30470, "192.168.1.21", function() {
             client.write(message);
             client.destroy();
         });
@@ -44,11 +51,13 @@ var udp_server = dgram.createSocket("udp4");
 
 udp_server.on("listening", function() {
     var address = udp_server.address();
-    console.log("Server listening on " + address.address + ":" + address.port);
+    //console.log("Server listening on " + address.address + ":" + address.port);
+    winston.info("Server listening on " + address.address + ":" + address.port);
 });
 
 udp_server.on("message", function(msg, rinfo) {
-    console.log("Server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
+    //console.log("Server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
+    winston.info("Server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
     io.sockets.emit('message', "" + msg);
 });
 
