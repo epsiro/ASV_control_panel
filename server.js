@@ -1,6 +1,6 @@
 /* Setup logging */
 var winston = require('winston');
-winston.add(winston.transports.File, { filename: 'myrerjordet_test_2014-04-25.log' });
+winston.add(winston.transports.File, { filename: 'nodejs.log' });
 
 winston.info('Starting server.');
 

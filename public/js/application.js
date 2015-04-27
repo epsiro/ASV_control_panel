@@ -69,7 +69,7 @@ $( document ).ready( function() {
                 $("span#asv_motor_running").text("Running")
             } else {
                 $("span#asv_motor_running").text("Not running")
-                $("span#asv_motor_running").text(ready_for_new_wp)
+                //$("span#asv_motor_running").text(ready_for_new_wp)
             }
 
             if (asv_gps_ok == "1") {
